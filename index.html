@@ -1,1234 +1,208 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TEMPUS — Hourglass Visualizer</title>
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=Space+Mono:wght@400;700&display=swap');
-:root{
-  --bg:#0a0805;--surf:#120e09;--surf2:#1c1610;--surf3:#251d12;
-  --bdr:#2a2018;--bdr2:#3d3020;
-  --acc:#e8a84c;--acc-d:rgba(232,168,76,.2);
-  --grn:#a8e84c;--grn-d:rgba(168,232,76,.14);
-  --red:#e85c4c;--blu:#6b9db8;
-  --sd:#c47a2b;--sl:#f5c97a;
-  --tp:#f0e6d0;--ts:#8a7a66;--td:#4a3e30;
-}
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%}
-body{background:var(--bg);color:var(--tp);font-family:'Space Mono',monospace;min-height:100vh;overflow-x:hidden}
-body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 60% 40% at 50% 0%,rgba(196,122,43,.07) 0%,transparent 60%);pointer-events:none;z-index:0}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TEMPUS — Hourglass Visualizer</title>
+    <link rel="stylesheet" href="style.css">
 
-/* ── HEADER ── */
-header{
-  position:sticky;top:0;z-index:300;
-  background:rgba(10,8,5,.96);backdrop-filter:blur(14px);
-  border-bottom:1px solid var(--bdr);
-  padding:0 1.4rem;height:68px;
-  display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:1rem;
-}
-.logo{font-family:'Cormorant Garamond',serif;font-size:1.45rem;font-weight:300;letter-spacing:.3em;color:var(--acc);text-transform:uppercase;white-space:nowrap}
-.logo em{font-style:italic;color:var(--ts);font-size:.75rem;letter-spacing:.1em;margin-left:.65rem}
-
-/* clock center block */
-.hdr-center{display:flex;flex-direction:column;align-items:center;gap:.1rem}
-.clk-lbl{font-size:.5rem;letter-spacing:.22em;color:var(--td);text-transform:uppercase}
-.clk-val{font-size:1.35rem;font-weight:700;letter-spacing:.06em;color:var(--acc);font-variant-numeric:tabular-nums}
-.clk-jumps{display:flex;gap:.2rem;margin-top:.1rem}
-.btn-gj{
-  background:var(--surf2);border:1px solid var(--bdr);color:var(--ts);
-  padding:.1rem .35rem;font-family:'Space Mono',monospace;font-size:.5rem;
-  cursor:pointer;letter-spacing:.04em;transition:all .14s;
-}
-.btn-gj:hover:not(:disabled){border-color:var(--acc);color:var(--acc)}
-.btn-gj.neg:hover:not(:disabled){border-color:var(--red);color:var(--red)}
-.btn-gj:disabled{opacity:.22;cursor:not-allowed}
-.ap-banner{
-  font-size:.52rem;letter-spacing:.14em;color:var(--grn);
-  padding:.16rem .5rem;border:1px solid rgba(168,232,76,.4);
-  background:rgba(168,232,76,.06);margin-top:.1rem;
-  animation:blink .85s ease-in-out infinite;display:none;text-align:center;
-}
-.ap-banner.on{display:block}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
-
-/* header right */
-.hdr-right{display:flex;flex-direction:column;align-items:flex-end;gap:.22rem}
-.goal-done{font-size:.52rem;letter-spacing:.18em;color:var(--grn);display:none;animation:blink 1s ease-in-out infinite}
-.goal-done.on{display:block}
-.hdr-flips{font-size:.5rem;color:var(--ts);letter-spacing:.12em}
-.hdr-flips strong{color:var(--grn);font-size:.65rem}
-
-/* ── GOAL BAR ── */
-.goal-bar-wrap{height:3px;background:var(--surf2);display:none}
-.goal-bar-wrap.on{display:block}
-.goal-bar-fill{height:100%;background:linear-gradient(90deg,var(--sd),var(--grn));max-width:100%;transition:width .15s linear}
-
-/* ── LAYOUT ── */
-.layout{display:grid;grid-template-columns:264px 1fr;min-height:calc(100vh - 68px);position:relative;z-index:1}
-
-/* ── SIDEBAR ── */
-.sidebar{
-  background:var(--surf);border-right:1px solid var(--bdr);
-  padding:1.15rem;display:flex;flex-direction:column;gap:1.1rem;
-  overflow-y:auto;position:sticky;top:68px;height:calc(100vh - 68px);
-}
-.sec-lbl{font-size:.53rem;letter-spacing:.26em;color:var(--td);text-transform:uppercase;padding-bottom:.38rem;border-bottom:1px solid var(--bdr);margin-bottom:.5rem}
-
-/* form */
-.add-form{display:flex;flex-direction:column;gap:.55rem}
-.f-row{display:flex;flex-direction:column;gap:.18rem}
-.f-lbl{font-size:.53rem;letter-spacing:.14em;color:var(--ts)}
-.f-in{
-  background:var(--surf2);border:1px solid var(--bdr);color:var(--tp);
-  padding:.38rem .55rem;font-family:'Space Mono',monospace;font-size:.7rem;
-  outline:none;transition:border-color .2s;width:100%;
-}
-.f-in:focus{border-color:var(--acc)}
-.f-in.err{border-color:var(--red)}
-.f-err{font-size:.52rem;color:var(--red);min-height:.72rem}
-.f-2c{display:flex;gap:.38rem}
-.f-col{flex:1;display:flex;flex-direction:column;gap:.18rem}
-.f-unit{font-size:.47rem;color:var(--td);letter-spacing:.1em;text-align:center;margin-top:.05rem}
-.btn-add{
-  background:var(--acc);color:var(--bg);border:none;
-  padding:.48rem .8rem;font-family:'Space Mono',monospace;
-  font-size:.62rem;letter-spacing:.15em;cursor:pointer;
-  text-transform:uppercase;transition:all .2s;font-weight:700;
-}
-.btn-add:hover{background:var(--sl);transform:translateY(-1px)}
-
-/* goal section */
-.goal-display{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:.4rem .5rem;background:var(--surf2);border:1px solid var(--bdr);
-  margin-bottom:.5rem;
-}
-.goal-display.active{border-color:var(--grn);background:rgba(168,232,76,.05)}
-.goal-display .g-lbl{font-size:.48rem;color:var(--td);letter-spacing:.1em}
-.goal-display .g-val{font-size:.72rem;color:var(--grn);font-weight:700;font-variant-numeric:tabular-nums}
-.goal-display.active .g-lbl{color:var(--grn)}
-.goal-display:not(.active) .g-val{color:var(--td)}
-.goal-btns{display:flex;gap:.35rem}
-.btn-goal{
-  flex:1;background:var(--surf2);border:1px solid var(--bdr);color:var(--ts);
-  padding:.36rem .4rem;font-family:'Space Mono',monospace;font-size:.54rem;
-  cursor:pointer;letter-spacing:.08em;transition:all .2s;text-transform:uppercase;
-}
-.btn-goal.set{background:var(--grn-d);border-color:rgba(168,232,76,.4);color:var(--grn)}
-.btn-goal.set:hover{background:var(--grn);color:#0c1a00}
-.btn-goal.clr:hover{border-color:var(--red);color:var(--red)}
-.btn-goal:disabled{opacity:.3;cursor:not-allowed}
-
-/* controls */
-.ctrls{display:flex;flex-direction:column;gap:.52rem}
-.c-row{display:flex;gap:.35rem}
-.btn-c{
-  flex:1;background:var(--surf2);border:1px solid var(--bdr);color:var(--tp);
-  padding:.4rem .18rem;font-family:'Space Mono',monospace;font-size:.58rem;
-  cursor:pointer;letter-spacing:.07em;transition:all .2s;
-  display:flex;align-items:center;justify-content:center;gap:.18rem;
-}
-.btn-c:hover:not(:disabled){border-color:var(--acc);color:var(--acc)}
-.btn-c:disabled{opacity:.22;cursor:not-allowed}
-.btn-c.on{background:var(--acc-d);border-color:var(--acc);color:var(--acc)}
-.btn-c.dng:hover:not(:disabled){border-color:var(--red);color:var(--red)}
-.spd-row{display:flex;gap:.25rem;align-items:center}
-.spd-lbl{font-size:.52rem;color:var(--ts);letter-spacing:.1em;white-space:nowrap}
-.btn-spd{
-  flex:1;background:var(--surf2);border:1px solid var(--bdr);color:var(--ts);
-  padding:.25rem .06rem;font-family:'Space Mono',monospace;font-size:.55rem;
-  cursor:pointer;transition:all .2s;text-align:center;
-}
-.btn-spd.on{background:var(--acc-d);border-color:var(--acc);color:var(--acc)}
-.btn-spd:hover:not(.on){border-color:var(--ts);color:var(--tp)}
-
-/* stats */
-.stats-g{display:grid;grid-template-columns:1fr 1fr;gap:.36rem}
-.sb{background:var(--surf2);border:1px solid var(--bdr);padding:.46rem;text-align:center}
-.sb .v{font-size:.95rem;color:var(--acc);font-weight:700}
-.sb .l{font-size:.47rem;color:var(--td);letter-spacing:.1em;margin-top:.1rem}
-.sb.gv .v{color:var(--grn)}
-
-/* ── MAIN ── */
-.main{display:flex;flex-direction:column;overflow-y:auto;max-height:calc(100vh - 68px)}
-.main-top{padding:1rem 1.35rem .6rem;display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
-.hg-cnt{font-size:.57rem;color:var(--ts);letter-spacing:.14em}
-.btn-clr{background:none;border:1px solid var(--bdr);color:var(--ts);padding:.25rem .58rem;font-family:'Space Mono',monospace;font-size:.53rem;cursor:pointer;letter-spacing:.1em;transition:all .2s}
-.btn-clr:hover{border-color:var(--red);color:var(--red)}
-
-.hg-grid{padding:0 1.35rem;display:grid;grid-template-columns:repeat(auto-fill,minmax(178px,1fr));gap:1rem;flex-shrink:0}
-.empty-st{grid-column:1/-1;text-align:center;padding:4rem 2rem;color:var(--td)}
-.empty-st .big{font-family:'Cormorant Garamond',serif;font-size:3.5rem;font-weight:300;opacity:.18;margin-bottom:.7rem}
-.empty-st p{font-size:.6rem;letter-spacing:.15em}
-
-/* ── HOURGLASS CARD ── */
-.hg-card{
-  background:var(--surf);border:1px solid var(--bdr);
-  padding:.68rem .62rem;
-  display:flex;flex-direction:column;align-items:center;gap:.42rem;
-  transition:border-color .3s,box-shadow .3s;
-  position:relative;overflow:hidden;
-}
-.hg-card.running{border-color:rgba(232,168,76,.22)}
-.hg-card.empty{border-color:rgba(168,232,76,.5);animation:epulse 1.1s ease-in-out infinite}
-@keyframes epulse{0%,100%{box-shadow:0 0 0 0 rgba(168,232,76,.04)}50%{box-shadow:0 0 14px 4px rgba(168,232,76,.12)}}
-.flip-badge{
-  display:none;position:absolute;top:0;left:0;right:0;
-  background:var(--grn);color:#0c1a00;
-  font-size:.47rem;font-weight:700;letter-spacing:.22em;
-  text-align:center;padding:.12rem;text-transform:uppercase;
-  animation:blink .8s ease-in-out infinite;
-}
-.hg-card.empty .flip-badge{display:block}
-
-/* Card header area */
-.hg-hdr{width:100%;position:relative;text-align:center;margin-top:.48rem;padding:0 1.2rem}
-.hg-nm{font-family:'Cormorant Garamond',serif;font-size:.92rem;font-weight:400;color:var(--tp);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.hg-id{font-size:.44rem;color:var(--td);letter-spacing:.14em;margin-top:.1rem}
-
-.btn-rm{
-  position:absolute;top:.5rem;right:.5rem;
-  width:18px;height:18px;
-  background:var(--surf2);border:1px solid var(--bdr);
-  color:var(--td);font-size:12px;cursor:pointer;
-  transition:all .2s;
-  display:flex;align-items:center;justify-content:center;
-  z-index:10;
-}
-.btn-rm:hover{color:var(--red);border-color:var(--red);background:rgba(232,92,76,.1)}
-
-/* SVG */
-.hg-vis{width:70px;height:105px;flex-shrink:0}
-.hg-svg{width:100%;height:100%;overflow:visible}
-.hg-svg.flipping{animation:flipA .65s cubic-bezier(.68,-.55,.27,1.55) forwards;transform-origin:center}
-@keyframes flipA{0%{transform:rotate(0)}50%{transform:rotate(90deg) scale(.78)}100%{transform:rotate(180deg)}}
-.sf{animation:sdrop .38s linear infinite}
-@keyframes sdrop{0%{transform:translateY(-2px);opacity:1}100%{transform:translateY(4px);opacity:0}}
-
-/* status */
-.hg-st{font-size:.47rem;letter-spacing:.18em;padding:.13rem .36rem;border:1px solid;text-transform:uppercase}
-.hg-st.running{color:var(--acc);border-color:var(--acc);background:rgba(232,168,76,.07)}
-.hg-st.paused{color:var(--blu);border-color:var(--blu);background:rgba(107,157,184,.07)}
-.hg-st.idle{color:var(--ts);border-color:var(--ts)}
-.hg-st.empty{color:var(--grn);border-color:var(--grn);background:rgba(168,232,76,.07)}
-
-/* time */
-.hg-time{font-size:.96rem;font-weight:700;color:var(--tp);font-variant-numeric:tabular-nums;letter-spacing:.04em;transition:color .3s}
-.hg-card.running .hg-time{color:var(--acc)}
-.hg-card.empty .hg-time{color:var(--grn)}
-
-/* flip count */
-.hg-fc{font-size:.48rem;color:var(--td);letter-spacing:.07em}
-.hg-card.empty .hg-fc{color:var(--grn)}
-
-/* jump row */
-.jrow{display:flex;gap:.22rem;width:100%}
-.btn-j{
-  flex:1;background:var(--surf2);border:1px solid var(--bdr);color:var(--td);
-  padding:.18rem .04rem;font-family:'Space Mono',monospace;font-size:.47rem;
-  cursor:pointer;text-align:center;transition:all .13s;line-height:1.3;
-}
-.btn-j:hover:not(:disabled){border-color:var(--acc);color:var(--acc)}
-.btn-j.neg:hover:not(:disabled){border-color:var(--red);color:var(--red)}
-.btn-j:disabled{opacity:.18;cursor:not-allowed}
-
-/* progress */
-.hg-pw{width:100%;height:3px;background:var(--surf2);overflow:hidden}
-.hg-pb{height:100%;background:linear-gradient(90deg,var(--sd),var(--sl));transition:width .12s linear}
-.hg-pb.g{background:linear-gradient(90deg,#5a8a10,var(--grn))}
-.hg-pr{width:100%;display:flex;justify-content:space-between;font-size:.47rem;color:var(--td)}
-
-/* flip btn */
-.btn-fl{
-  background:none;border:1px solid var(--bdr);color:var(--ts);
-  padding:.28rem .6rem;font-family:'Space Mono',monospace;
-  font-size:.52rem;cursor:pointer;letter-spacing:.1em;
-  text-transform:uppercase;width:100%;transition:all .2s;
-}
-.btn-fl:hover:not(:disabled){border-color:var(--acc);color:var(--acc)}
-.btn-fl:disabled{opacity:.16;cursor:not-allowed}
-.btn-fl.cf{
-  border-color:var(--grn);color:var(--grn);background:var(--grn-d);font-weight:700;
-  animation:fbp .9s ease-in-out infinite;
-}
-@keyframes fbp{0%,100%{box-shadow:0 0 0 0 rgba(168,232,76,.08)}50%{box-shadow:0 0 8px 2px rgba(168,232,76,.08)}}
-
-/* ── FLIP LOG ── */
-.log-section{margin:1rem 1.35rem;border:1px solid var(--bdr);flex-shrink:0}
-.log-hdr{padding:.46rem .7rem;display:flex;justify-content:space-between;align-items:center;background:var(--surf2);cursor:pointer;user-select:none;border-bottom:1px solid var(--bdr)}
-.log-hdr-t{font-size:.53rem;letter-spacing:.18em;color:var(--ts);text-transform:uppercase}
-.log-tog{font-size:.5rem;color:var(--td)}
-.log-body{max-height:200px;overflow-y:auto;display:none}
-.log-body.open{display:block}
-.log-tbl{width:100%;border-collapse:collapse;font-size:.5rem}
-.log-tbl th{padding:.32rem .55rem;text-align:left;color:var(--td);letter-spacing:.1em;font-size:.45rem;border-bottom:1px solid var(--bdr);font-weight:400;background:var(--surf);position:sticky;top:0}
-.log-tbl td{padding:.28rem .55rem;border-bottom:1px solid rgba(42,32,24,.45);color:var(--ts);font-variant-numeric:tabular-nums}
-.log-tbl td:nth-child(2){color:var(--acc)}
-.log-tbl tr:last-child td{border-bottom:none}
-.log-nil td{color:var(--td);font-style:italic;text-align:center;padding:.9rem;font-size:.48rem}
-
-/* ── FLIP MODAL ── */
-.modal-bg{
-  position:fixed;inset:0;background:rgba(0,0,0,.78);backdrop-filter:blur(5px);
-  z-index:500;display:none;align-items:center;justify-content:center;
-}
-.modal-bg.open{display:flex}
-.modal{
-  background:var(--surf);border:1px solid var(--bdr2);
-  width:min(510px,94vw);max-height:82vh;
-  display:flex;flex-direction:column;
-  box-shadow:0 28px 70px rgba(0,0,0,.75);
-}
-.modal-head{padding:.9rem 1.15rem;border-bottom:1px solid var(--bdr);display:flex;align-items:flex-start;justify-content:space-between}
-.modal-ttl{font-family:'Cormorant Garamond',serif;font-size:1.15rem;font-weight:300;color:var(--acc);letter-spacing:.1em}
-.modal-sub{font-size:.5rem;color:var(--ts);letter-spacing:.1em;margin-top:.16rem}
-.modal-body{padding:.65rem 1.15rem;overflow-y:auto;flex:1}
-.fm-row{
-  display:flex;align-items:center;gap:.58rem;
-  padding:.44rem .35rem;border-bottom:1px solid rgba(42,32,24,.4);
-  transition:background .14s;cursor:pointer;
-}
-.fm-row:last-child{border-bottom:none}
-.fm-row:hover{background:rgba(255,255,255,.02)}
-.fm-row.is-empty{background:rgba(168,232,76,.04)}
-.fm-chk{width:13px;height:13px;cursor:pointer;accent-color:var(--grn);flex-shrink:0}
-.fm-nm{font-family:'Cormorant Garamond',serif;font-size:.9rem;font-weight:400;color:var(--tp);min-width:32px}
-.fm-st{font-size:.46rem;letter-spacing:.12em;padding:.1rem .28rem;border:1px solid;text-transform:uppercase;flex-shrink:0}
-.fm-st.running{color:var(--acc);border-color:var(--acc)}
-.fm-st.paused{color:var(--blu);border-color:var(--blu)}
-.fm-st.idle{color:var(--ts);border-color:var(--ts)}
-.fm-st.empty{color:var(--grn);border-color:var(--grn)}
-.fm-rem{font-size:.52rem;color:var(--ts);font-variant-numeric:tabular-nums;margin-left:auto}
-.fm-fc{font-size:.47rem;color:var(--td);margin-left:.4rem}
-.fm-tag{font-size:.42rem;color:var(--grn);letter-spacing:.1em;margin-left:.2rem}
-.fm-empty-note{padding:.8rem;font-size:.52rem;color:var(--td);text-align:center}
-
-.modal-foot{padding:.65rem 1.15rem;border-top:1px solid var(--bdr);display:flex;gap:.42rem;flex-wrap:wrap}
-.btn-mf{
-  flex:1;min-width:110px;padding:.45rem .4rem;
-  font-family:'Space Mono',monospace;font-size:.58rem;
-  letter-spacing:.09em;cursor:pointer;text-transform:uppercase;
-  transition:all .2s;text-align:center;
-}
-.btn-mf.prim{background:var(--grn);color:#0c1a00;border:none;font-weight:700}
-.btn-mf.prim:hover{background:#c5f55a}
-.btn-mf.sec{background:var(--surf2);border:1px solid var(--bdr);color:var(--ts)}
-.btn-mf.sec:hover{border-color:var(--acc);color:var(--acc)}
-.btn-mf.gho{background:none;border:1px solid var(--bdr);color:var(--td)}
-.btn-mf.gho:hover{border-color:var(--red);color:var(--red)}
-
-/* ── NOTIFICATIONS ── */
-.ntf-wrap{position:fixed;top:78px;right:1.2rem;z-index:600;display:flex;flex-direction:column;gap:.32rem;pointer-events:none}
-.ntf{
-  background:var(--surf2);border:1px solid var(--acc);
-  padding:.42rem .75rem;font-size:.56rem;letter-spacing:.1em;color:var(--acc);
-  animation:nin .22s ease,nout .28s ease 1.9s forwards;
-}
-.ntf.grn{border-color:var(--grn);color:var(--grn)}
-.ntf.red{border-color:var(--red);color:var(--red)}
-@keyframes nin{from{transform:translateX(12px);opacity:0}to{transform:none;opacity:1}}
-@keyframes nout{from{opacity:1}to{opacity:0;transform:translateX(10px)}}
-
-::-webkit-scrollbar{width:4px}
-::-webkit-scrollbar-track{background:var(--bg)}
-::-webkit-scrollbar-thumb{background:var(--bdr)}
-::-webkit-scrollbar-thumb:hover{background:var(--acc)}
-
-@media(max-width:680px){
-  .layout{grid-template-columns:1fr}
-  .sidebar{position:static;height:auto;max-height:none}
-  .main{max-height:none}
-  header{grid-template-columns:1fr;height:auto;padding:.6rem 1rem;gap:.4rem}
-}
-</style>
 </head>
 <body>
 
 <!-- HEADER -->
 <header>
-  <div class="logo">Tempus <em>hourglass visualizer</em></div>
-
-  <div class="hdr-center">
-    <div class="clk-lbl">ELAPSED TIME</div>
-    <div class="clk-val" id="clkVal">00:00:00</div>
-    <div class="clk-jumps">
-      <button class="btn-gj neg" data-d="-60">−1m</button>
-      <button class="btn-gj neg" data-d="-10">−10s</button>
-      <button class="btn-gj" data-d="10">+10s</button>
-      <button class="btn-gj" data-d="60">+1m</button>
+    <div class="logo">
+        <span>Tempus</span>
+        <em>hourglass visualizer</em>
+        <button class="theme-toggle" id="themeToggle" title="Toggle theme">
+            <span class="icon-sun">☀</span>
+            <span class="icon-moon">☽</span>
+        </button>
     </div>
-    <div class="ap-banner" id="apBanner">⚠ AUTO-PAUSED — MANAGE FLIPS THEN START</div>
-  </div>
 
-  <div class="hdr-right">
-    <div class="goal-done" id="goalDone">✓ GOAL REACHED</div>
-    <div class="hdr-flips">TOTAL FLIPS <strong id="hdrFlips">0</strong></div>
-  </div>
+    <div class="hdr-center">
+        <div class="clk-lbl">ELAPSED TIME</div>
+        <div class="clk-val" id="clkVal">00:00:00</div>
+        <div class="clk-jumps">
+            <button class="btn-gj neg" data-d="-60">−1m</button>
+            <button class="btn-gj neg" data-d="-10">−10s</button>
+            <button class="btn-gj" data-d="10">+10s</button>
+            <button class="btn-gj" data-d="60">+1m</button>
+        </div>
+        <div class="ap-banner" id="apBanner">⚠ AUTO-PAUSED — MANAGE FLIPS THEN START</div>
+    </div>
+
+    <div class="hdr-right">
+        <div class="goal-done" id="goalDone">✓ GOAL REACHED</div>
+        <div class="hdr-flips">TOTAL FLIPS <strong id="hdrFlips">0</strong></div>
+    </div>
 </header>
 <div class="goal-bar-wrap" id="goalBarWrap">
-  <div class="goal-bar-fill" id="goalBarFill" style="width:0%"></div>
+    <div class="goal-bar-fill" id="goalBarFill" style="width:0%"></div>
 </div>
 
 <div class="layout">
-  <!-- SIDEBAR -->
-  <aside class="sidebar">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
 
-    <!-- NEW HOURGLASS SECTION -->
-    <section>
-      <div class="sec-lbl">New Hourglass</div>
-      <div class="add-form">
-        <div class="f-row">
-          <label class="f-lbl">NAME (blank = auto A, B, C…)</label>
-          <input class="f-in" id="iName" placeholder="e.g. Pomodoro" maxlength="20">
-        </div>
-        <div class="f-row">
-          <label class="f-lbl">CAPACITY</label>
-          <div class="f-2c">
-            <div class="f-col">
-              <input class="f-in" id="iMin" type="number" placeholder="0" min="0" max="59">
-              <div class="f-unit">MIN</div>
+        <!-- NEW HOURGLASS SECTION -->
+        <section>
+            <div class="sec-lbl">New Hourglass</div>
+            <div class="add-form">
+                <div class="f-row">
+                    <label class="f-lbl">NAME (blank = auto A, B, C…)</label>
+                    <input class="f-in" id="iName" placeholder="e.g. Pomodoro" maxlength="20">
+                </div>
+                <div class="f-row">
+                    <label class="f-lbl">CAPACITY</label>
+                    <div class="f-2c">
+                        <div class="f-col">
+                            <input class="f-in" id="iMin" type="number" placeholder="0" min="0" max="59">
+                            <div class="f-unit">MIN</div>
+                        </div>
+                        <div class="f-col">
+                            <input class="f-in" id="iSec" type="number" placeholder="30" min="0" max="59">
+                            <div class="f-unit">SEC</div>
+                        </div>
+                    </div>
+                    <div class="f-err" id="capErr"></div>
+                </div>
+                <button class="btn-add" id="btnAdd">＋ ADD HOURGLASS</button>
             </div>
-            <div class="f-col">
-              <input class="f-in" id="iSec" type="number" placeholder="30" min="0" max="59">
-              <div class="f-unit">SEC</div>
+        </section>
+
+        <!-- SESSION GOAL SECTION (SEPARATE) -->
+        <section>
+            <div class="sec-lbl">Session Goal</div>
+            <div class="goal-display" id="goalDisplay">
+                <span class="g-lbl">CURRENT GOAL</span>
+                <span class="g-val" id="goalVal">— NO GOAL —</span>
             </div>
-          </div>
-          <div class="f-err" id="capErr"></div>
-        </div>
-        <button class="btn-add" id="btnAdd">＋ ADD HOURGLASS</button>
-      </div>
-    </section>
+            <div class="f-row" style="margin-bottom:.5rem">
+                <label class="f-lbl">SET NEW GOAL</label>
+                <div class="f-2c">
+                    <div class="f-col">
+                        <input class="f-in" id="gMin" type="number" placeholder="0" min="0" max="59">
+                        <div class="f-unit">MIN</div>
+                    </div>
+                    <div class="f-col">
+                        <input class="f-in" id="gSec" type="number" placeholder="0" min="0" max="59">
+                        <div class="f-unit">SEC</div>
+                    </div>
+                </div>
+                <div class="f-err" id="goalErr"></div>
+            </div>
+            <div class="goal-btns">
+                <button class="btn-goal set" id="btnSetGoal">✓ SET GOAL</button>
+                <button class="btn-goal clr" id="btnClrGoal">✕ CLEAR</button>
+            </div>
+        </section>
 
-    <!-- SESSION GOAL SECTION (SEPARATE) -->
-    <section>
-      <div class="sec-lbl">Session Goal</div>
-      <div class="goal-display" id="goalDisplay">
-        <span class="g-lbl">CURRENT GOAL</span>
-        <span class="g-val" id="goalVal">— NO GOAL —</span>
-      </div>
-      <div class="f-row" style="margin-bottom:.45rem">
-        <label class="f-lbl">SET NEW GOAL</label>
-        <div class="f-2c">
-          <div class="f-col">
-            <input class="f-in" id="gMin" type="number" placeholder="0" min="0" max="59">
-            <div class="f-unit">MIN</div>
-          </div>
-          <div class="f-col">
-            <input class="f-in" id="gSec" type="number" placeholder="0" min="0" max="59">
-            <div class="f-unit">SEC</div>
-          </div>
-        </div>
-        <div class="f-err" id="goalErr"></div>
-      </div>
-      <div class="goal-btns">
-        <button class="btn-goal set" id="btnSetGoal">✓ SET GOAL</button>
-        <button class="btn-goal clr" id="btnClrGoal">✕ CLEAR</button>
-      </div>
-    </section>
+        <section>
+            <div class="sec-lbl">Controls</div>
+            <div class="ctrls">
+                <div class="c-row">
+                    <button class="btn-c" id="btnStart">▶ START</button>
+                    <button class="btn-c" id="btnPause">⏸ PAUSE</button>
+                </div>
+                <div class="c-row">
+                    <button class="btn-c dng" id="btnReset">↺ RESET ALL</button>
+                </div>
+                <div class="spd-row">
+                    <span class="spd-lbl">SPEED</span>
+                    <button class="btn-spd" data-s=".5">½×</button>
+                    <button class="btn-spd on" data-s="1">1×</button>
+                    <button class="btn-spd" data-s="2">2×</button>
+                    <button class="btn-spd" data-s="4">4×</button>
+                </div>
+            </div>
+        </section>
 
-    <section>
-      <div class="sec-lbl">Controls</div>
-      <div class="ctrls">
-        <div class="c-row">
-          <button class="btn-c" id="btnStart">▶ START</button>
-          <button class="btn-c" id="btnPause">⏸ PAUSE</button>
-        </div>
-        <div class="c-row">
-          <button class="btn-c dng" id="btnReset">↺ RESET ALL</button>
-        </div>
-        <div class="spd-row">
-          <span class="spd-lbl">SPEED</span>
-          <button class="btn-spd" data-s=".5">½×</button>
-          <button class="btn-spd on" data-s="1">1×</button>
-          <button class="btn-spd" data-s="2">2×</button>
-          <button class="btn-spd" data-s="4">4×</button>
-        </div>
-      </div>
-    </section>
+        <section>
+            <div class="sec-lbl">Statistics</div>
+            <div class="stats-g">
+                <div class="sb">
+                    <div class="v" id="stTotal">0</div>
+                    <div class="l">TOTAL</div>
+                </div>
+                <div class="sb">
+                    <div class="v" id="stRun">0</div>
+                    <div class="l">RUNNING</div>
+                </div>
+                <div class="sb">
+                    <div class="v" id="stEmp">0</div>
+                    <div class="l">EMPTY</div>
+                </div>
+                <div class="sb">
+                    <div class="v" id="stPau">0</div>
+                    <div class="l">PAUSED</div>
+                </div>
+                <div class="sb gv" style="grid-column:1/-1">
+                    <div class="v" id="stFlips">0</div>
+                    <div class="l">TOTAL FLIPS</div>
+                </div>
+            </div>
+        </section>
 
-    <section>
-      <div class="sec-lbl">Statistics</div>
-      <div class="stats-g">
-        <div class="sb"><div class="v" id="stTotal">0</div><div class="l">TOTAL</div></div>
-        <div class="sb"><div class="v" id="stRun">0</div><div class="l">RUNNING</div></div>
-        <div class="sb"><div class="v" id="stEmp">0</div><div class="l">EMPTY</div></div>
-        <div class="sb"><div class="v" id="stPau">0</div><div class="l">PAUSED</div></div>
-        <div class="sb gv" style="grid-column:1/-1"><div class="v" id="stFlips">0</div><div class="l">TOTAL FLIPS</div></div>
-      </div>
-    </section>
+    </aside>
 
-  </aside>
-
-  <!-- MAIN -->
-  <main class="main">
-    <div class="main-top">
-      <div class="hg-cnt" id="hgCnt">0 hourglasses</div>
-      <button class="btn-clr" id="btnClrAll">CLEAR ALL</button>
-    </div>
-    <div class="hg-grid" id="hgGrid">
-      <div class="empty-st"><div class="big">⧗</div><p>ADD AN HOURGLASS TO BEGIN</p></div>
-    </div>
-    <!-- FLIP LOG -->
-    <div class="log-section">
-      <div class="log-hdr" id="logToggle">
-        <span class="log-hdr-t">⧖ Flip Event Log</span>
-        <span class="log-tog" id="logTxt">▾ EXPAND</span>
-      </div>
-      <div class="log-body" id="logBody">
-        <table class="log-tbl">
-          <thead>
-            <tr>
-              <th>GLOBAL TIME</th>
-              <th>GLASS</th>
-              <th>REMAINING</th>
-              <th>GLASS ELAPSED</th>
-            </tr>
-          </thead>
-          <tbody id="logTbody">
-            <tr class="log-nil"><td colspan="4">No flips recorded yet</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </main>
+    <!-- MAIN -->
+    <main class="main">
+        <div class="main-top">
+            <div class="hg-cnt" id="hgCnt">0 hourglasses</div>
+            <button class="btn-clr" id="btnClrAll">CLEAR ALL</button>
+        </div>
+        <div class="hg-grid" id="hgGrid">
+            <div class="empty-st">
+                <div class="big">⧗</div>
+                <p>ADD AN HOURGLASS TO BEGIN</p></div>
+        </div>
+        <!-- FLIP LOG -->
+        <div class="log-section">
+            <div class="log-hdr" id="logToggle">
+                <span class="log-hdr-t">⧖ Flip Event Log</span>
+                <span class="log-tog" id="logTxt">▾ EXPAND</span>
+            </div>
+            <div class="log-body" id="logBody">
+                <table class="log-tbl">
+                    <thead>
+                    <tr>
+                        <th>GLOBAL TIME</th>
+                        <th>GLASS</th>
+                        <th>REMAINING</th>
+                        <th>GLASS ELAPSED</th>
+                    </tr>
+                    </thead>
+                    <tbody id="logTbody">
+                    <tr class="log-nil">
+                        <td colspan="4">No flips recorded yet</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
 </div>
 
 <!-- FLIP MODAL -->
 <div class="modal-bg" id="flipBg">
-  <div class="modal">
-    <div class="modal-head">
-      <div>
-        <div class="modal-ttl">Manage Flips</div>
-        <div class="modal-sub">Check any hourglass to flip it — empty glasses are pre-selected</div>
-      </div>
+    <div class="modal">
+        <div class="modal-head">
+            <div>
+                <div class="modal-ttl">Manage Flips</div>
+                <div class="modal-sub">Check any hourglass to flip it — empty glasses are pre-selected</div>
+            </div>
+        </div>
+        <div class="modal-body" id="flipBody"></div>
+        <div class="modal-foot">
+            <button class="btn-mf prim" id="btnFlipStart">⇅ Flip Selected &amp; Start</button>
+            <button class="btn-mf sec" id="btnSkipStart">▶ Skip &amp; Start</button>
+            <button class="btn-mf gho" id="btnMCancel">Cancel</button>
+        </div>
     </div>
-    <div class="modal-body" id="flipBody"></div>
-    <div class="modal-foot">
-      <button class="btn-mf prim" id="btnFlipStart">⇅ Flip Selected &amp; Start</button>
-      <button class="btn-mf sec"  id="btnSkipStart">▶ Skip &amp; Start</button>
-      <button class="btn-mf gho"  id="btnMCancel">Cancel</button>
-    </div>
-  </div>
 </div>
 
 <div class="ntf-wrap" id="ntfWrap"></div>
-
-<script>
-(function(){
-'use strict';
-
-// ══════════════════════════════════════════
-// STATE
-// ══════════════════════════════════════════
-const st = {
-  glasses:[],
-  running:false,
-  paused:false,
-  speed:1,
-  elapsed:0,
-  lastTs:null,
-  nextId:1,
-  nameIdx:0,
-  totalFlips:0,
-  goalSec:null,
-  goalDone:false,
-  autoPaused:false,
-  log:[],
-  raf:null,
-  max:50,
-};
-
-const S={I:'idle',R:'running',P:'paused',E:'empty'};
-
-// ══════════════════════════════════════════
-// NAME SEQUENCE: A…Z, AA…ZZ
-// ══════════════════════════════════════════
-function genName(i){
-  const L='ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-  return i<26 ? L[i] : L[Math.floor((i-26)/26)]+L[(i-26)%26];
-}
-
-// ══════════════════════════════════════════
-// MODEL
-// ══════════════════════════════════════════
-function makeGlass(cap,name){
-  const nm = name.trim()||genName(st.nameIdx);
-  st.nameIdx++;
-  return {
-    id:st.nextId++, name:nm, capacity:cap,
-    remaining:cap, status:S.I,
-    dir:'TTB', pct:100,
-    flipping:false, flipCount:0,
-    lastFlipAt:st.elapsed,
-  };
-}
-
-// ══════════════════════════════════════════
-// TICK — single rAF loop
-// ══════════════════════════════════════════
-function tick(ts){
-  st.raf = requestAnimationFrame(tick);
-  if(!st.running||st.paused) return;
-  if(st.lastTs===null){st.lastTs=ts;return;}
-
-  const raw = Math.min(ts-st.lastTs, 200);
-  const dSec = (raw/1000)*st.speed;
-  st.lastTs = ts;
-  st.elapsed += raw*st.speed;
-
-  // check goal
-  if(st.goalSec!==null&&!st.goalDone&&st.elapsed/1000>=st.goalSec){
-    st.goalDone=true;
-    goalReached();
-    return;
-  }
-
-  let emptied=false;
-  for(const g of st.glasses){
-    if(g.status!==S.R) continue;
-    g.remaining = Math.max(0, g.remaining-dSec);
-    g.pct = (g.remaining/g.capacity)*100;
-    if(g.remaining<=0){
-      g.remaining=0; g.pct=0; g.status=S.E;
-      emptied=true;
-      onEmpty(g);
-    }
-  }
-  if(emptied) autoPause();
-  else updateUI();
-}
-
-function onEmpty(g){
-  notify(`${g.name} is empty!`,'grn');
-  chime();
-}
-
-function autoPause(){
-  st.paused=true; st.autoPaused=true; st.lastTs=null;
-  for(const g of st.glasses) if(g.status===S.R) g.status=S.P;
-  $('apBanner').classList.add('on');
-  updateUI();
-  openModal();
-}
-
-function goalReached(){
-  st.running=false; st.paused=false;
-  for(const g of st.glasses) if(g.status===S.R) g.status=S.P;
-  $('goalDone').classList.add('on');
-  notify('✓ GOAL REACHED — simulation stopped','grn');
-  updateUI();
-}
-
-// ══════════════════════════════════════════
-// CONTROLS
-// ══════════════════════════════════════════
-function startSim(){
-  if(st.goalDone) return;
-  if(st.running&&!st.paused) return;
-
-  if(st.autoPaused){
-    if(st.glasses.some(g=>g.status===S.E)){openModal();return;}
-    st.autoPaused=false;
-    $('apBanner').classList.remove('on');
-  }
-
-  if(st.paused){
-    st.paused=false; st.lastTs=null;
-    for(const g of st.glasses) if(g.status===S.P) g.status=S.R;
-    updateUI(); return;
-  }
-
-  st.running=true; st.paused=false; st.lastTs=null;
-  for(const g of st.glasses){
-    if(g.status===S.I){g.status=S.R; g.lastFlipAt=st.elapsed;}
-  }
-  updateUI();
-}
-
-function pauseSim(){
-  if(!st.running||st.paused) return;
-  st.paused=true; st.autoPaused=false; st.lastTs=null;
-  $('apBanner').classList.remove('on');
-  for(const g of st.glasses) if(g.status===S.R) g.status=S.P;
-  updateUI();
-}
-
-function resetSim(){
-  st.running=false; st.paused=false;
-  st.lastTs=null; st.elapsed=0;
-  st.totalFlips=0; st.goalDone=false;
-  st.autoPaused=false; st.log=[];
-  $('apBanner').classList.remove('on');
-  $('goalDone').classList.remove('on');
-  closeModal();
-  for(const g of st.glasses){
-    g.remaining=g.capacity; g.pct=100;
-    g.status=S.I; g.dir='TTB';
-    g.flipping=false; g.flipCount=0;
-    g.lastFlipAt=0;
-  }
-  renderLog();
-  updateUI();
-  updateGoalDisplay();
-}
-
-// ══════════════════════════════════════════
-// GOAL FUNCTIONS
-// ══════════════════════════════════════════
-function setGoal(sec){
-  st.goalSec = sec;
-  st.goalDone = false;
-  $('goalDone').classList.remove('on');
-  updateGoalDisplay();
-  notify(`Goal set: ${fmtHMS(sec)}`,'grn');
-}
-
-function clearGoal(){
-  st.goalSec = null;
-  st.goalDone = false;
-  $('goalDone').classList.remove('on');
-  updateGoalDisplay();
-  notify('Goal cleared');
-}
-
-function updateGoalDisplay(){
-  const disp = $('goalDisplay');
-  const val = $('goalVal');
-  if(st.goalSec !== null){
-    disp.classList.add('active');
-    val.textContent = fmtHMS(st.goalSec);
-  } else {
-    disp.classList.remove('active');
-    val.textContent = '— NO GOAL —';
-  }
-  // Update goal bar visibility
-  if(st.goalSec !== null){
-    $('goalBarWrap').classList.add('on');
-    $('goalBarFill').style.width = `${Math.min(100,(st.elapsed/1000/st.goalSec)*100)}%`;
-  } else {
-    $('goalBarWrap').classList.remove('on');
-  }
-}
-
-// ══════════════════════════════════════════
-// FLIP — preserves elapsed sand when not empty
-// ══════════════════════════════════════════
-function flipGlass(id){
-  const g=st.glasses.find(x=>x.id===id);
-  if(!g) return;
-
-  const remBefore   = g.remaining;
-  const glassElMs   = st.elapsed - g.lastFlipAt;
-
-  // log entry
-  st.log.unshift({
-    globalMs:st.elapsed,
-    name:g.name,
-    remaining:remBefore,
-    glassElMs,
-  });
-
-  g.flipCount++;
-  st.totalFlips++;
-  g.flipping   = true;
-  
-  // Preserve sand state when flipping
-  g.remaining  = g.capacity - g.remaining;
-  g.pct        = (g.remaining / g.capacity) * 100;
-  
-  g.dir        = g.dir==='TTB'?'BTT':'TTB';
-  g.lastFlipAt = st.elapsed;
-  
-  if(g.status === S.E || st.running) {
-    g.status = S.R;
-  } else if(g.status === S.P) {
-    g.status = S.P;
-  } else {
-    g.status = S.I;
-  }
-
-  if(!st.running){st.running=true; st.lastTs=null;}
-
-  setTimeout(()=>{
-    g.flipping=false;
-    const svg=document.getElementById(`svg-${g.id}`);
-    if(svg) svg.classList.remove('flipping');
-    renderGlass(g);
-  },700);
-
-  renderLog();
-  notify(`${g.name} flipped × ${g.flipCount}`,'grn');
-}
-
-function openModal(){
-  const body=$('flipBody');
-  if(!st.glasses.length){
-    body.innerHTML='<div class="fm-empty-note">No hourglasses added yet</div>';
-  } else {
-    body.innerHTML = st.glasses.map(g=>`
-      <label class="fm-row${g.status===S.E?' is-empty':''}">
-        <input type="checkbox" class="fm-chk" data-id="${g.id}"${g.status===S.E?' checked':''}>
-        <span class="fm-nm">${g.name}</span>
-        <span class="fm-st ${g.status}">${g.status.toUpperCase()}</span>
-        <span class="fm-rem">${fmtMS(g.remaining)}</span>
-        <span class="fm-fc">⇅${g.flipCount}</span>
-        ${g.status===S.E?'<span class="fm-tag">EMPTY</span>':''}
-      </label>
-    `).join('');
-  }
-  $('flipBg').classList.add('open');
-}
-
-function closeModal(){
-  $('flipBg').classList.remove('open');
-}
-
-function applyFlipAndStart(doFlip){
-  if(doFlip){
-    document.querySelectorAll('.fm-chk:checked').forEach(cb=>{
-      flipGlass(parseInt(cb.dataset.id,10));
-    });
-  }
-  closeModal();
-  st.autoPaused=false; st.paused=false; st.lastTs=null;
-  $('apBanner').classList.remove('on');
-  if(!st.running) st.running=true;
-  for(const g of st.glasses) if(g.status===S.P) g.status=S.R;
-  updateUI();
-}
-
-function checkAutoPauseDone(){
-  if(!st.autoPaused) return;
-  if(!st.glasses.some(g=>g.status===S.E)){
-    st.autoPaused=false; st.paused=false; st.lastTs=null;
-    $('apBanner').classList.remove('on');
-    for(const g of st.glasses) if(g.status===S.P) g.status=S.R;
-    closeModal();
-  }
-}
-
-// ══════════════════════════════════════════
-// JUMP
-// ══════════════════════════════════════════
-function jumpGlobal(dSec){
-  if(st.goalDone) return;
-  st.elapsed = Math.max(0, st.elapsed + dSec*1000);
-
-  if(dSec>0){
-    let emp=false;
-    for(const g of st.glasses){
-      if(g.status!==S.R&&g.status!==S.P) continue;
-      g.remaining = Math.max(0, g.remaining-dSec);
-      g.pct = (g.remaining/g.capacity)*100;
-      if(g.remaining<=0){
-        g.remaining=0; g.pct=0; g.status=S.E;
-        emp=true; onEmpty(g);
-      }
-    }
-    if(emp) autoPause();
-    else updateUI();
-  } else {
-    const abs=Math.abs(dSec);
-    for(const g of st.glasses){
-      if(g.status!==S.R&&g.status!==S.P) continue;
-      g.remaining=Math.min(g.capacity, g.remaining+abs);
-      g.pct=(g.remaining/g.capacity)*100;
-    }
-    updateUI();
-  }
-}
-
-function jumpSingle(id, dSec){
-  const g=st.glasses.find(x=>x.id===id);
-  if(!g||g.status===S.E) return;
-  if(dSec>0){
-    g.remaining=Math.max(0, g.remaining-dSec);
-    if(g.remaining<=0){
-      g.remaining=0; g.pct=0; g.status=S.E;
-      onEmpty(g);
-      if(st.running&&!st.paused) autoPause();
-    } else {
-      g.pct=(g.remaining/g.capacity)*100;
-    }
-  } else {
-    g.remaining=Math.min(g.capacity, g.remaining+Math.abs(dSec));
-    g.pct=(g.remaining/g.capacity)*100;
-  }
-  renderGlass(g);
-}
-
-// ══════════════════════════════════════════
-// ADD / REMOVE
-// ══════════════════════════════════════════
-function addGlass(cap,name){
-  if(st.glasses.length>=st.max){notify(`Max ${st.max} reached`,'red');return;}
-  const g=makeGlass(cap,name);
-  if(st.running&&!st.paused){g.status=S.R; g.lastFlipAt=st.elapsed;}
-  else if(st.running&&st.paused){g.status=S.P; g.lastFlipAt=st.elapsed;}
-
-  st.glasses.push(g);
-  const grid=$('hgGrid');
-  grid.querySelector('.empty-st')?.remove();
-  grid.appendChild(createCard(g));
-  syncSVG(g);
-  syncStats();
-  notify(`${g.name} added (${fmtMS(cap)})`);
-}
-
-function removeGlass(id){
-  const i=st.glasses.findIndex(g=>g.id===id);
-  if(i<0) return;
-  st.glasses.splice(i,1);
-  document.getElementById(`hg-${id}`)?.remove();
-  if(!st.glasses.length) showEmpty();
-  checkAutoPauseDone();
-  syncStats();
-}
-
-function showEmpty(){
-  $('hgGrid').innerHTML='<div class="empty-st"><div class="big">⧗</div><p>ADD AN HOURGLASS TO BEGIN</p></div>';
-}
-
-// ══════════════════════════════════════════
-// SVG
-// ══════════════════════════════════════════
-function buildSVG(g){
-  const W=70,H=105,cx=35,topY=4,botY=101,midY=52;
-  const tw=28,bw=28,nw=2, id=g.id;
-  return `<svg id="svg-${id}" class="hg-svg" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <clipPath id="tC${id}"><polygon points="${cx-tw},${topY} ${cx+tw},${topY} ${cx+nw},${midY} ${cx-nw},${midY}"/></clipPath>
-    <clipPath id="bC${id}"><polygon points="${cx-nw},${midY} ${cx+nw},${midY} ${cx+bw},${botY} ${cx-bw},${botY}"/></clipPath>
-  </defs>
-  <polygon id="gb${id}" points="${cx-tw},${topY} ${cx+tw},${topY} ${cx+nw},${midY} ${cx+nw},${midY} ${cx+bw},${botY} ${cx-bw},${botY} ${cx-nw},${midY} ${cx-nw},${midY}" fill="rgba(18,14,9,.72)" stroke="#252015" stroke-width="1.5"/>
-  <rect id="ts${id}" x="${cx-tw-2}" y="${midY-12}" width="${tw*2+4}" height="3" fill="rgba(196,122,43,.92)" clip-path="url(#tC${id})" style="display:none"/>
-  <rect id="bs${id}" x="${cx-bw-2}" y="${botY-3}" width="${bw*2+4}" height="3" fill="rgba(232,168,76,.95)" clip-path="url(#bC${id})" style="display:none"/>
-  <g id="sf${id}" style="display:none">
-    <g class="sf" style="transform-origin:${cx}px ${midY}px"><circle cx="${cx}" cy="${midY-1}" r="1.15" fill="rgba(240,180,80,.95)"/></g>
-    <g class="sf" style="transform-origin:${cx}px ${midY+4}px;animation-delay:.17s"><circle cx="${cx}" cy="${midY+4}" r=".8" fill="rgba(240,180,80,.55)"/></g>
-  </g>
-  <line x1="${cx-tw+4}" y1="${topY+6}" x2="${cx-nw-1}" y2="${midY-4}" stroke="rgba(255,255,255,.04)" stroke-width="2" stroke-linecap="round"/>
-  <line x1="${cx-nw-1}" y1="${midY+4}" x2="${cx-bw+4}" y2="${botY-6}" stroke="rgba(255,255,255,.03)" stroke-width="2" stroke-linecap="round"/>
-  <rect x="${cx-tw-1}" y="${topY-3}" width="${tw*2+2}" height="5" fill="#1c1610" stroke="#252015" stroke-width="1"/>
-  <rect x="${cx-bw-1}" y="${botY-1}" width="${bw*2+2}" height="5" fill="#1c1610" stroke="#252015" stroke-width="1"/>
-</svg>`;
-}
-
-function syncSVG(g){
-  const W=70,H=105,cx=35,topY=4,botY=101,midY=52;
-  const tw=28,bw=28, id=g.id;
-  const pct=g.pct/100, fp=1-pct;
-  const tCH=midY-topY-10;
-  const tSH=Math.max(0,pct*tCH);
-  const tSY=midY-10-tSH;
-  const bCH=botY-midY-10;
-  const bSH=Math.min(bCH,fp*bCH);
-  const bSY=botY-bSH;
-  const isEmpty=g.status===S.E, isRun=g.status===S.R;
-
-  const gb=document.getElementById(`gb${id}`);
-  const ts=document.getElementById(`ts${id}`);
-  const bs=document.getElementById(`bs${id}`);
-  const sf=document.getElementById(`sf${id}`);
-  if(!gb) return;
-
-  gb.setAttribute('stroke', isEmpty?'rgba(168,232,76,.65)':isRun?'#5a4a30':'#252015');
-  if(ts){
-    ts.setAttribute('y',tSY); ts.setAttribute('height',Math.max(0,tSH+5));
-    ts.style.display=(tSH>0.5&&!isEmpty)?'':'none';
-  }
-  if(bs){
-    bs.setAttribute('y',bSY); bs.setAttribute('height',Math.max(0,bSH+5));
-    bs.style.display=bSH>0.5?'':'none';
-  }
-  if(sf) sf.style.display=(isRun&&pct>0.002)?'':'none';
-
-  const svgEl=document.getElementById(`svg-${id}`);
-  if(svgEl&&g.flipping&&!svgEl.classList.contains('flipping'))
-    svgEl.classList.add('flipping');
-}
-
-// ══════════════════════════════════════════
-// CARD DOM
-// ══════════════════════════════════════════
-function createCard(g){
-  const d=document.createElement('div');
-  d.id=`hg-${g.id}`; d.className=`hg-card ${g.status}`;
-  d.innerHTML=`
-    <div class="flip-badge">⇅ FLIP ME</div>
-    <button class="btn-rm" title="Remove">×</button>
-    <div class="hg-hdr">
-      <div class="hg-nm" title="${g.name}">${g.name}</div>
-      <div class="hg-id">#${p3(g.id)}</div>
-    </div>
-    <div class="hg-vis">${buildSVG(g)}</div>
-    <div class="hg-st ${g.status}">${g.status.toUpperCase()}</div>
-    <div class="hg-time">${fmtMS(g.remaining)}</div>
-    <div class="hg-fc">⇅ 0 flips</div>
-    <div class="jrow">
-      <button class="btn-j neg" data-d="-60">−1m</button>
-      <button class="btn-j neg" data-d="-10">−10s</button>
-      <button class="btn-j" data-d="10">+10s</button>
-      <button class="btn-j" data-d="60">+1m</button>
-    </div>
-    <div class="hg-pw"><div class="hg-pb" style="width:100%"></div></div>
-    <div class="hg-pr"><span class="pc">100%</span><span class="cp">${fmtMS(g.capacity)}</span></div>
-    <button class="btn-fl">⇅ FLIP</button>
-  `;
-  d.querySelector('.btn-rm').onclick=()=>removeGlass(g.id);
-  d.querySelector('.btn-fl').onclick=()=>{
-    flipGlass(g.id);
-    checkAutoPauseDone();
-    updateUI();
-  };
-  d.querySelectorAll('.btn-j').forEach(b=>b.onclick=()=>jumpSingle(g.id,parseInt(b.dataset.d,10)));
-  return d;
-}
-
-// ══════════════════════════════════════════
-// RENDER
-// ══════════════════════════════════════════
-function renderGlass(g){
-  const card=document.getElementById(`hg-${g.id}`);
-  if(!card) return;
-  const isEmpty=g.status===S.E;
-  const pct=Math.round(g.pct);
-
-  card.className=`hg-card ${g.status}`;
-  const st_el=card.querySelector('.hg-st');
-  st_el.textContent=g.status.toUpperCase(); st_el.className=`hg-st ${g.status}`;
-  card.querySelector('.hg-time').textContent=fmtMS(g.remaining);
-  const fc=g.flipCount;
-  card.querySelector('.hg-fc').textContent=`⇅ ${fc} flip${fc!==1?'s':''}`;
-  const bar=card.querySelector('.hg-pb');
-  bar.style.width=`${pct}%`; bar.className=`hg-pb${isEmpty?' g':''}`;
-  card.querySelector('.pc').textContent=`${pct}%`;
-  const fl=card.querySelector('.btn-fl');
-  fl.disabled=false; 
-  fl.className=`btn-fl${isEmpty?' cf':''}`;
-  card.querySelectorAll('.btn-j').forEach(b=>b.disabled=isEmpty);
-  syncSVG(g);
-}
-
-// ══════════════════════════════════════════
-// UPDATE ALL
-// ══════════════════════════════════════════
-function updateUI(){
-  for(const g of st.glasses) renderGlass(g);
-  $('clkVal').textContent=fmtHMS(st.elapsed/1000);
-  $('hdrFlips').textContent=st.totalFlips;
-
-  // goal bar
-  if(st.goalSec!==null){
-    $('goalBarWrap').classList.add('on');
-    $('goalBarFill').style.width=`${Math.min(100,(st.elapsed/1000/st.goalSec)*100)}%`;
-  } else {
-    $('goalBarWrap').classList.remove('on');
-  }
-
-  syncStats();
-
-  const anyRun=st.running&&!st.paused;
-  const bs=$('btnStart'), bp=$('btnPause');
-  bs.classList.toggle('on',anyRun); bp.classList.toggle('on',st.paused);
-  bs.disabled=(anyRun||st.goalDone);
-  bp.disabled=(!st.running||st.paused||st.goalDone);
-  document.querySelectorAll('.btn-gj').forEach(b=>b.disabled=st.goalDone);
-
-  // Update goal buttons state
-  $('btnClrGoal').disabled = st.goalSec === null;
-}
-
-function syncStats(){
-  const run=st.glasses.filter(g=>g.status===S.R).length;
-  const emp=st.glasses.filter(g=>g.status===S.E).length;
-  const pau=st.glasses.filter(g=>g.status===S.P).length;
-  $('stTotal').textContent=st.glasses.length;
-  $('stRun').textContent=run; $('stEmp').textContent=emp; $('stPau').textContent=pau;
-  $('stFlips').textContent=st.totalFlips;
-  $('hgCnt').textContent=`${st.glasses.length} hourglass${st.glasses.length!==1?'es':''}`;
-}
-
-function renderLog(){
-  const tb=$('logTbody');
-  if(!st.log.length){
-    tb.innerHTML='<tr class="log-nil"><td colspan="4">No flips recorded yet</td></tr>';
-    return;
-  }
-  tb.innerHTML=st.log.map(e=>`<tr>
-    <td>${fmtHMS(e.globalMs/1000)}</td>
-    <td>${e.name}</td>
-    <td>${fmtMS(e.remaining)}</td>
-    <td>${fmtMS(e.glassElMs/1000)}</td>
-  </tr>`).join('');
-}
-
-// ══════════════════════════════════════════
-// HELPERS
-// ══════════════════════════════════════════
-function fmtHMS(s){
-  s=Math.floor(Math.max(0,s));
-  return `${p2(Math.floor(s/3600))}:${p2(Math.floor(s/60)%60)}:${p2(s%60)}`;
-}
-function fmtMS(s){
-  s=Math.floor(Math.max(0,s));
-  const m=Math.floor(s/60),r=s%60;
-  if(m===0) return `${s}s`;
-  if(r===0) return `${m}m`;
-  return `${m}m ${p2(r)}s`;
-}
-function p2(n){return String(n).padStart(2,'0')}
-function p3(n){return String(n).padStart(3,'0')}
-function $(id){return document.getElementById(id)}
-
-// ══════════════════════════════════════════
-// NOTIFICATIONS & SOUND
-// ══════════════════════════════════════════
-function notify(msg,type=''){
-  const el=document.createElement('div');
-  el.className=`ntf${type?' '+type:''}`;
-  el.textContent=msg;
-  $('ntfWrap').appendChild(el);
-  setTimeout(()=>el.remove(),2300);
-}
-function chime(){
-  try{
-    const ctx=new(window.AudioContext||window.webkitAudioContext)();
-    const o=ctx.createOscillator(), g=ctx.createGain();
-    o.connect(g); g.connect(ctx.destination);
-    o.frequency.setValueAtTime(880,ctx.currentTime);
-    o.frequency.exponentialRampToValueAtTime(440,ctx.currentTime+.35);
-    g.gain.setValueAtTime(.14,ctx.currentTime);
-    g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.55);
-    o.start(ctx.currentTime); o.stop(ctx.currentTime+.55);
-  }catch(e){}
-}
-
-// ══════════════════════════════════════════
-// VALIDATION
-// ══════════════════════════════════════════
-function valCap(m,s){
-  if(m.trim()===''&&s.trim()==='') return{ok:false,msg:'Enter capacity'};
-  const mv=m.trim()===''?0:parseInt(m,10);
-  const sv=s.trim()===''?0:parseInt(s,10);
-  if(isNaN(mv)||mv<0||mv>59) return{ok:false,msg:'Minutes: 0–59'};
-  if(isNaN(sv)||sv<0||sv>59) return{ok:false,msg:'Seconds: 0–59'};
-  const t=mv*60+sv;
-  if(t<=0) return{ok:false,msg:'Total must be > 0'};
-  if(t>3600) return{ok:false,msg:'Max 60 minutes'};
-  return{ok:true,val:t};
-}
-
-function valGoal(m,s){
-  if(m.trim()===''&&s.trim()==='') return{ok:false,msg:'Enter goal time'};
-  const mv=m.trim()===''?0:parseInt(m,10);
-  const sv=s.trim()===''?0:parseInt(s,10);
-  if(isNaN(mv)||mv<0||mv>59) return{ok:false,msg:'Minutes: 0–59'};
-  if(isNaN(sv)||sv<0||sv>59) return{ok:false,msg:'Seconds: 0–59'};
-  const t=mv*60+sv;
-  if(t<=0) return{ok:false,msg:'Goal must be > 0'};
-  return{ok:true,val:t};
-}
-
-// ══════════════════════════════════════════
-// BIND EVENTS
-// ══════════════════════════════════════════
-function bindEvents(){
-  // ADD HOURGLASS
-  $('btnAdd').onclick=()=>{
-    const cr=valCap($('iMin').value,$('iSec').value);
-    $('capErr').textContent=cr.ok?'':cr.msg;
-    if(!cr.ok) return;
-
-    addGlass(cr.val,$('iName').value);
-    $('iMin').value=''; $('iSec').value='';
-    $('iName').value='';
-  };
-
-  ['iMin','iSec','iName'].forEach(id=>{
-    $(id).addEventListener('keydown',e=>{if(e.key==='Enter')$('btnAdd').click()});
-    $(id).addEventListener('input',()=>$('capErr').textContent='');
-  });
-
-  // SET GOAL
-  $('btnSetGoal').onclick=()=>{
-    const gr=valGoal($('gMin').value,$('gSec').value);
-    $('goalErr').textContent=gr.ok?'':gr.msg;
-    if(!gr.ok) return;
-
-    setGoal(gr.val);
-    $('gMin').value=''; $('gSec').value='';
-  };
-
-  ['gMin','gSec'].forEach(id=>{
-    $(id).addEventListener('keydown',e=>{if(e.key==='Enter')$('btnSetGoal').click()});
-    $(id).addEventListener('input',()=>$('goalErr').textContent='');
-  });
-
-  // CLEAR GOAL
-  $('btnClrGoal').onclick=()=>clearGoal();
-
-  // CONTROLS
-  $('btnStart').onclick=()=>startSim();
-  $('btnPause').onclick=()=>{pauseSim()};
-  $('btnReset').onclick=()=>{resetSim();notify('All hourglasses reset')};
-
-  // SPEED
-  document.querySelectorAll('.btn-spd').forEach(b=>{
-    b.onclick=()=>{
-      st.speed=parseFloat(b.dataset.s);
-      st.lastTs=null;
-      document.querySelectorAll('.btn-spd').forEach(x=>x.classList.toggle('on',parseFloat(x.dataset.s)===st.speed));
-    };
-  });
-
-  // GLOBAL JUMPS
-  document.querySelectorAll('.btn-gj').forEach(b=>{
-    b.onclick=()=>jumpGlobal(parseInt(b.dataset.d,10));
-  });
-
-  // CLEAR ALL
-  $('btnClrAll').onclick=()=>{
-    if(!st.glasses.length) return;
-    st.glasses=[]; st.running=false; st.paused=false;
-    st.elapsed=0; st.lastTs=null;
-    st.totalFlips=0; st.log=[];
-    st.autoPaused=false; st.goalDone=false;
-    st.nameIdx=0;
-    $('apBanner').classList.remove('on');
-    $('goalDone').classList.remove('on');
-    closeModal(); showEmpty();
-    syncStats(); updateUI(); renderLog();
-    notify('Cleared all hourglasses');
-  };
-
-  // MODAL BUTTONS
-  $('btnFlipStart').onclick=()=>applyFlipAndStart(true);
-  $('btnSkipStart').onclick=()=>applyFlipAndStart(false);
-  $('btnMCancel').onclick=()=>closeModal();
-  $('flipBg').onclick=e=>{if(e.target===e.currentTarget) closeModal()};
-
-  // LOG TOGGLE
-  $('logToggle').onclick=()=>{
-    const b=$('logBody'), open=b.classList.toggle('open');
-    $('logTxt').textContent=open?'▴ COLLAPSE':'▾ EXPAND';
-  };
-}
-
-// ══════════════════════════════════════════
-// INIT
-// ══════════════════════════════════════════
-bindEvents();
-st.raf=requestAnimationFrame(tick);
-$('btnStart').disabled=false;
-$('btnPause').disabled=true;
-$('btnClrGoal').disabled=true;
-syncStats();
-updateGoalDisplay();
-
-})();
-</script>
+<script src="script.js"></script>
 </body>
 </html>
