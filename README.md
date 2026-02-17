@@ -1,4 +1,4 @@
-# ⏳ Hourglass Puzzle Visualizer | TEMPUS — Interactive Timer Simulator (HTML CSS JavaScript)
+# ⏳ Hourglass Puzzle Visualizer | Interactive Timer Simulator (HTML CSS JavaScript)
 🚀 **Live Demo:**  
 👉 https://raveshrawal.github.io/Hourglass-Problem-Visualizer/
 
